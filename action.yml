@@ -1,0 +1,51 @@
+name: 'Bonfire extension QA'
+author: 'Giacomo Leidi'
+description: 'Uses Bonfire extensions standard commands to build and test an extension'
+# inputs:
+#   name:
+#     description: 'The name of the output image you would like to push'
+#     required: true
+#   username:
+#     description: 'The login username for the registry'
+#     required: true
+#   password:
+#     description: 'The login password for the registry'
+#     required: true
+#   image:
+#     description: 'The input image path'
+#     required: true
+#   registry:
+#     description: 'Use registry for pushing to a custom registry'
+#     required: false
+#   workdir:
+#     description: 'Use workdir when you would like to change the directory for building'
+#     required: false
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Elixir
+      uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
+      with:
+        elixir-version: '1.15.2' # [Required] Define the Elixir version
+        otp-version: '26.0'      # [Required] Define the Erlang/OTP version
+
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+
+    - name: Setup just
+      run: sudo snap install --edge just --classic
+      shell: bash
+
+    - name: Random Number Generator
+      run: just deps-get
+      shell: bash
+
+    - name: Set GitHub Path
+      run: just test
+      shell: bash
