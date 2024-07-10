@@ -5,7 +5,7 @@ inputs:
   elixir-version:
     description: 'The version of Elixir to be used for building and testing'
     required: false
-    default: '1.17.1'
+    default: '1.17.2'
   otp-version:
     description: 'The version of OTP to be used for building and testing'
     required: false
