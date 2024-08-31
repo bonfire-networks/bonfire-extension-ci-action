@@ -33,7 +33,7 @@ runs:
       shell: bash
 
     - name: Get dependencies
-      run: just deps-get
+      run: just deps-fetch
       shell: bash
 
     - name: Compile package
