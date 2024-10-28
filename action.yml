@@ -52,5 +52,5 @@ runs:
       shell: bash
 
     - name: Run tests
-      run: DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test
+      run: DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test '--exclude disabled'
       shell: bash
