@@ -10,6 +10,10 @@ inputs:
     description: 'The version of OTP to be used for building and testing'
     required: false
     default: '27.1.2'
+  db-startup-time:
+    description: 'The number of seconds CI will wait before expecting the Postgres db to be running'
+    required: false
+    default: '10'
 runs:
   using: "composite"
   steps:
@@ -41,5 +45,5 @@ runs:
       shell: bash
 
     - name: Run tests
-      run: just test
+      run: DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test
       shell: bash
