@@ -10,10 +10,6 @@ inputs:
     description: 'The version of OTP to be used for building and testing'
     required: false
     default: '27.1.2'
-  support-db-tests:
-    description: 'Whether the extension supports Postgres backed tests. Default is 1, set it to 0 to turn off Postgres tests setup.'
-    required: false
-    default: '1'
   db-startup-time:
     description: 'The number of seconds CI will wait before expecting the Postgres db to be running'
     required: false
@@ -56,5 +52,5 @@ runs:
       shell: bash
 
     - name: Run tests
-      run: DB_TESTS=${{ inputs.support-db-tests }} DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test --exclude disabled
+      run: DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test --exclude disabled
       shell: bash
