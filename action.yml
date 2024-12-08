@@ -9,7 +9,7 @@ inputs:
   otp-version:
     description: 'The version of OTP to be used for building and testing'
     required: false
-    default: '27.1.2'
+    default: '27.1.3'
   db-startup-time:
     description: 'The number of seconds CI will wait before expecting the Postgres db to be running'
     required: false
