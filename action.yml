@@ -47,6 +47,10 @@ runs:
       run: just deps-get
       shell: bash
 
+    - name: Lint package
+      run: just lint
+      shell: bash
+
     - name: Compile package
       run: just compile
       shell: bash
