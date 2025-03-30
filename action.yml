@@ -5,11 +5,11 @@ inputs:
   elixir-version:
     description: 'The version of Elixir to be used for building and testing'
     required: false
-    default: '1.17.2'
+    default: '1.18.3'
   otp-version:
     description: 'The version of OTP to be used for building and testing'
     required: false
-    default: '27.2.2'
+    default: '27.3'
   db-startup-time:
     description: 'The number of seconds CI will wait before expecting the Postgres db to be running'
     required: false
@@ -46,11 +46,17 @@ runs:
     - name: Get dependencies
       run: just deps-get
       shell: bash
+      env:
+        MIX_ENV: test
 
-    - name: Compile package
+    - name: Compile app
       run: just compile
       shell: bash
+      env:
+        MIX_ENV: test
 
     - name: Run tests
-      run: DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test --exclude disabled
+      run: DB_STARTUP_TIME=${{ inputs.db-startup-time }} just test 
       shell: bash
+      env:
+        MIX_ENV: test
