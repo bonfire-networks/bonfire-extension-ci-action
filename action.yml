@@ -70,9 +70,19 @@ runs:
           deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}-${{ github.run_id }}
 
+    - name: Check branch
+      id: check_branch
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/update_translations" ]]; then
+          echo "is_translation_branch=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_translation_branch=false" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
     - name: Check if TX is configured
       id: check_tx_enabled
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      if: ${{ steps.check_branch.outputs.is_translation_branch == 'false' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       run: |
         if [ -d ".tx" ] && [ "${{ inputs.tx-token }}" != "" ]; then
           echo "tx_enabled=true" >> $GITHUB_OUTPUT

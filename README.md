@@ -63,3 +63,18 @@ When configured with a Transifex token, this action will:
 4. Create or update a PR with the changes (if any)
 
 The PR will be created on the `update_translations` branch.
+
+## Avoiding Loops
+
+To prevent the action from running again when the translation PR is merged, configure your workflow to skip running when the action is triggered from the `update_translations` branch:
+
+```yaml
+jobs:
+  test:
+    # Skip running this workflow when it comes from the update_translations branch
+    if: ${{ !contains(github.ref, 'update_translations') }}
+    runs-on: ubuntu-latest
+    # ... rest of your workflow
+```
+
+See the examples directory for a complete workflow configuration.
