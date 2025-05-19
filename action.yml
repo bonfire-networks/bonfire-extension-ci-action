@@ -104,9 +104,9 @@ runs:
         
     - name: Pull translations using transifex client
       if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
-      run: /tmp/tx/tx --token ${{ inputs.tx-token }} pull
+      run: /tmp/tx/tx --token ${{ inputs.tx-token }} pull --all
       shell: bash
-       
+      
     - name: Check for translation changes
       if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
       id: check_tx_changes
