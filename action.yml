@@ -6,6 +6,10 @@ inputs:
     description: 'The number of seconds CI will wait before expecting the Postgres db to be running'
     required: false
     default: '10'
+  tx-token:
+    description: 'Transifex API token'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -62,10 +66,8 @@ runs:
     - name: Check if TX is configured
       id: check_tx_folder
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      env:
-        TX_TOKEN_EXISTS: ${{ secrets.TX_TOKEN != '' || vars.TX_TOKEN != '' }}
       run: |
-        if [ -d ".tx" ] && [ "$TX_TOKEN_EXISTS" == "true" ]; then
+        if [ -d ".tx" ] && [ "${{ inputs.tx-token }}" != "" ]; then
           echo "tx_enabled=true" >> $GITHUB_OUTPUT
         else
           echo "tx_enabled=false" >> $GITHUB_OUTPUT
@@ -90,7 +92,7 @@ runs:
       if: ${{ steps.check_tx_folder.outputs.tx_enabled == 'true' }}
       uses: transifex/cli-action@v2
       with:
-        token: ${{ secrets.TX_TOKEN || vars.TX_TOKEN }}
+        token: ${{ inputs.tx-token }}
  
     - name: Compile
       run: mix compile
