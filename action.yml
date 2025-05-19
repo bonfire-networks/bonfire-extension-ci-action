@@ -88,20 +88,18 @@ runs:
           _build
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}-${{ github.run_id }}
 
-    - name: Push source file using transifex client
+    - name: Push source translations using transifex client
       if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
       uses: transifex/cli-action@v2
       with:
         token: ${{ inputs.tx-token }}
-        command: 'push'
+        args: 'push'
         
-    - name: Pull translations from Transifex
+    - name: Pull translations using transifex client
       if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
-      uses: transifex/cli-action@v2
-      with:
-        token: ${{ inputs.tx-token }}
-        command: 'pull'
-        
+      run: /tmp/tx/tx --token ${{ inputs.tx-token }} pull
+      shell: bash
+       
     - name: Check for translation changes
       if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
       id: check_tx_changes
