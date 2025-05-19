@@ -167,13 +167,30 @@ runs:
       
     - name: Create Pull Request
       if: ${{ steps.check_tx_changes.outputs.changes == 'true' && steps.check_pr.outputs.result == 'not_exists' }}
-      uses: peter-evans/create-pull-request@v7
+      uses: actions/github-script@v6
       with:
-        branch-token: ${{ inputs.github-token || github.token }}
-        title: 'Update translations'
-        body: 'This automated PR updates translations pulled from Transifex.'
-        branch: ${{ env.BRANCH_NAME }}
-        base: 'main'
+        github-token: ${{ inputs.github-token || github.token }}
+        script: |
+          const { owner, repo } = context.repo;
+          
+          try {
+            const result = await github.rest.pulls.create({
+              owner,
+              repo,
+              head: 'update_translations',
+              base: 'main',
+              title: 'Update translations',
+              body: 'This automated PR updates translations pulled from Transifex.'
+            });
+            console.log(`Created PR #${result.data.number}`);
+          } catch (error) {
+            console.log(`Error creating PR: ${error.message}`);
+            if (error.message.includes('A pull request already exists')) {
+              console.log('PR already exists, skipping creation');
+            } else {
+              throw error;
+            }
+          }
  
     - name: Compile
       run: mix compile
