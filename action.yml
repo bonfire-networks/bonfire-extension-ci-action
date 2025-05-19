@@ -10,6 +10,10 @@ inputs:
     description: 'Transifex API token'
     required: false
     default: ''
+  github-token:
+    description: 'GitHub token with permission to create branches and PRs'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -116,6 +120,12 @@ runs:
       run: |
         git config user.name "Transifex Bot"
         git config user.email "tx.bot@bonfire.cafe"
+        
+        # Setup authenticated remote if token is provided
+        if [ -n "${{ inputs.github-token }}" ]; then
+          REPO_URL="https://${{ inputs.github-token }}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote set-url origin "${REPO_URL}"
+        fi
 
         BRANCH_NAME="update_translations"
         echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
@@ -156,7 +166,7 @@ runs:
       if: ${{ steps.check_tx_changes.outputs.changes == 'true' && steps.check_pr.outputs.result == 'not_exists' }}
       uses: peter-evans/create-pull-request@v5
       with:
-        token: ${{ github.token }}
+        token: ${{ inputs.github-token || github.token }}
         title: 'Update translations'
         body: 'This automated PR updates translations pulled from Transifex.'
         branch: ${{ env.BRANCH_NAME }}
