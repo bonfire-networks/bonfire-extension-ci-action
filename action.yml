@@ -64,7 +64,7 @@ runs:
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}-${{ github.run_id }}
 
     - name: Check if TX is configured
-      id: check_tx_folder
+      id: check_tx_enabled
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       run: |
         if [ -d ".tx" ] && [ "${{ inputs.tx-token }}" != "" ]; then
@@ -75,7 +75,7 @@ runs:
       shell: bash
 
     - name: Extract and push localisation strings
-      if: ${{ steps.check_tx_folder.outputs.tx_enabled == 'true' }}
+      if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
       run: mix gettext.extract
       env:
         MIX_ENV: test
@@ -89,10 +89,80 @@ runs:
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}-${{ github.run_id }}
 
     - name: Push source file using transifex client
-      if: ${{ steps.check_tx_folder.outputs.tx_enabled == 'true' }}
+      if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
       uses: transifex/cli-action@v2
       with:
         token: ${{ inputs.tx-token }}
+        command: 'push'
+        
+    - name: Pull translations from Transifex
+      if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
+      uses: transifex/cli-action@v2
+      with:
+        token: ${{ inputs.tx-token }}
+        command: 'pull'
+        
+    - name: Check for translation changes
+      if: ${{ steps.check_tx_enabled.outputs.tx_enabled == 'true' }}
+      id: check_tx_changes
+      run: |
+        if [[ -n $(git status --porcelain) ]]; then
+          echo "changes=true" >> $GITHUB_OUTPUT
+        else
+          echo "changes=false" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+      
+    - name: Setup translation branch
+      if: ${{ steps.check_tx_changes.outputs.changes == 'true' }}
+      run: |
+        git config user.name "Transifex Bot"
+        git config user.email "tx.bot@bonfire.cafe"
+
+        BRANCH_NAME="update_translations"
+        echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+        
+        # Delete local branch if it exists
+        git branch -D $BRANCH_NAME 2>/dev/null || true
+        
+        # Always create a fresh branch from current main
+        git checkout -b $BRANCH_NAME
+        
+        # Will force push later to override remote branch if it exists
+      shell: bash
+      
+    - name: Commit translation changes
+      if: ${{ steps.check_tx_changes.outputs.changes == 'true' }}
+      run: |
+        git add .
+        git commit -m "Update translations from Transifex"
+        git push -f origin $BRANCH_NAME
+      shell: bash
+      
+    - name: Check for existing PR
+      if: ${{ steps.check_tx_changes.outputs.changes == 'true' }}
+      uses: actions/github-script@v6
+      id: check_pr
+      with:
+        script: |
+          const prs = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            head: `${context.repo.owner}:update_translations`,
+            state: 'open'
+          });
+          return prs.data.length > 0 ? 'exists' : 'not_exists';
+        result-encoding: string
+      
+    - name: Create Pull Request
+      if: ${{ steps.check_tx_changes.outputs.changes == 'true' && steps.check_pr.outputs.result == 'not_exists' }}
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ github.token }}
+        title: 'Update translations'
+        body: 'This automated PR updates translations pulled from Transifex.'
+        branch: ${{ env.BRANCH_NAME }}
+        base: 'main'
  
     - name: Compile
       run: mix compile
